@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>
+            {% block title %}Capital First - CFL!{% endblock %}
+        </title>
+        <link rel="shortcut icon" href="{{ asset('CFLdesign/assets/img/favicon.png') }}">
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.png') }}"/>
+
+        <!-- Font -->
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:300,400,500,600,700" rel="stylesheet" type="text/css">
+
+        {% block stylesheets %}
+            <link rel="stylesheet" href="{{ asset('CFLdesign/assets/css/bootstrap.min.css') }}">
+            <link rel="stylesheet" type="text/css" href="{{ asset('CFLdesign/assets/css/jquery.dataTables.min.css') }}">
+            <link rel="stylesheet" href="{{ asset('CFLdesign/assets/css/dataTables.bootstrap.min.css') }}">
+            <link rel="stylesheet" type="text/css" href="{{ asset('CFLdesign/assets/css/fixedColumns.dataTables.min.css') }}">
+            <link rel="stylesheet" href="{{ asset('CFLdesign/assets/css/bootstrap-datetimepicker.min.css') }}">
+            <link rel="stylesheet" href="{{ asset('CFLdesign/assets/css/style.css') }}">
+
+            <link type="text/css" rel="stylesheet" href="{{ asset('CFLdesign/assets/css/jsgrid.css') }}" />
+            <link type="text/css" rel="stylesheet" href="{{ asset('CFLdesign/assets/css/jsgrid-theme.css') }}" />
+        {% endblock %}
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]> <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script> <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script> <![endif]-->
+        <style>
+            .popupBg {
+                    width: 100% !important;
+                    height: 100% !important;
+                    position: fixed;
+                    background: rgba(0, 0, 0, 0.8);
+                    top: 0;
+                    left: 0;
+                    display: none;
+            }
+
+            .popupBox {
+                    position: fixed;
+                    top: 35%;
+                    left: 50%;
+                    background: #fff;
+                    z-index: 9999;
+                    {#display: none;#}
+                    text-align: center;
+                    width: 38%;
+                    margin-left: -20%;
+                    border: 1px solid #ccc;
+                    padding: 15px 1%;
+            }
+
+
+            .loader1 {
+                    background: rgba(0, 0, 0, 0.8);;
+                    color: #666666;
+                    position: fixed;
+                    height: 100%;
+                    width: 100%;
+                    z-index: 5000;
+                    top: 0;
+                    left: 0;
+                    float: left;
+                    text-align: center;
+                    padding-top: 25%;
+                    transition: unset; -webkit-transition: unset;
+            }
+        </style>
+        {% block preloads %}
+        <script src="{{ asset('CFLdesign/assets/js/jquery.min.js') }}"></script>
+        <script src="{{ asset('CFLdesign/assets/js/bootstrap.min.js') }}"></script>
+        {% endblock %}
+        <script type="text/javascript">
+        function loadOverlay(){
+            $('.loader1').fadeOut(1000);
+            $('.popupBox').fadeIn(500);
+        }
+         $(document).ready(function() {
+             var pathArray = window.location.pathname.split('/');
+             var routeName = pathArray[pathArray.length - 1];
+             if(routeName === "logsummary" || routeName === "dailylog" || routeName === "trackHistory" || routeName === "managerlist" || routeName === "so" || routeName === "uploadLog" || routeName === "storeauto" || routeName === "devices" || routeName === "log" || routeName === "amsapi" || routeName === "deliveryapi" || routeName === "documentuploads") {
+                 loadOverlay();
+             }
+         });
+        </script>
+
+    </head>
+    {% block menuSection %}
+    {% set routeName = app.request.get('_route') %}
+
+    <body class="attendance-pages">
+    {% if routeName == "attendance_log_summary_screen" or routeName == "attendance_log_daily_log" or routeName == "track_so_history" or routeName == "manager_list" or routeName == "ams_so_view" or routeName == "upload_history" or routeName == "ams_store_view" or routeName == "device_list" or routeName == "notification_log" or routeName == "ams_config_api_list" or routeName == "delivery_config_api_list" or routeName == "uploads_details" %}
+            <div class="loader1">
+                <div class="popupBox small">
+                    <div style="border:1px solid #ccc; padding:15px; margin:20px;">
+                        Please wait, your request is being processed...
+                    </div>
+                </div>
+             </div>
+    {% endif %}
+            <header class="attendance-header">
+                <nav class="navbar navbar-default">
+                    <!--<input type="checkbox" id="hamburger" name="hamburger"/> <label for="hamburger" class="hamburger"></label>-->
+                    <a href="{{ path('ams_dashboard_view') }}" class="logo-beside-hamburger">
+                        <img type="image/svg+xml" src="{{ asset('CFLdesign/assets/img/Cfl_Logo.svg') }}"/>
+                    </a>
+
+                    <div class="welcome-admin">
+                        <p>Welcome
+                            {% if is_granted('ROLE_ADMIN') %}
+                                {% if app.user.userName == "amsadmin" %}
+                                    <span>Super Admin</span>
+                                {% else %}
+                                    <span>{{ app.user.name }}</span>
+                                {% endif %}
+                            {% elseif is_granted('ROLE_MANAGER') %}
+                                {% if app.user.name is defined %}
+                                    <span>{{ app.user.name }}</span>
+                                {% else %}
+                                    <span>Manager</span>
+                                {% endif %}
+
+                            {# Product Admins #}
+                            {% elseif is_granted('ROLE_CD_ADMIN') %}
+                                <span>CD Product Admin</span>
+                            {% elseif is_granted('ROLE_TW_ADMIN') %}
+                                <span>TW Product Admin</span>
+                            {% elseif is_granted('ROLE_CSELL_ADMIN') %}
+                                <span>Cross Sell Product Admin</span>
+                            {% elseif is_granted('ROLE_MBL_ADMIN') %}
+                                <span>MBL Product Admin</span>
+                            {% elseif is_granted('ROLE_PL_ADMIN') %}
+                                <span>PL Product Admin</span>
+                            {% elseif is_granted('ROLE_UC_ADMIN') %}
+                                <span>UC Product Admin</span>
+                            {% elseif is_granted('ROLE_BIL_ADMIN') %}
+                                <span>BIL Product Admin</span>
+                            {% elseif is_granted('ROLE_HL_ADMIN') %}
+                                <span>HLProduct Admin</span>
+                            {% elseif is_granted('ROLE_LAP_ADMIN') %}
+                                <span>LAP Product Admin</span>
+                            {% elseif is_granted('ROLE_LAPS_ADMIN') %}
+                                <span>LAP-Suvidha Product Admin</span>
+                            {% elseif is_granted('ROLE_CD_PARTNER_ADMIN') %}
+                                <span>CD PARTNER ADMIN</span>
+                            {% elseif is_granted('ROLE_SEPL_ADMIN') %}
+                                <span>SEPL Product Admin</span>
+                            {% elseif is_granted('ROLE_COLLECTIONS_ADMIN') %}
+                                <span>Collections Product Admin</span>
+                                {# Product Users #}
+                            {% elseif is_granted('ROLE_CD_USER') %}
+                                <span>CD Product User</span>
+                            {% elseif is_granted('ROLE_TW_USER') %}
+                                <span>TW Product User</span>
+                            {% elseif is_granted('ROLE_RCU_USER') %}
+                                <span>RCU User</span>
+                            {% elseif is_granted('ROLE_CSELL_USER') %}
+                                <span>Cross Sell Product User</span>
+                            {% elseif is_granted('ROLE_MBL_USER') %}
+                                <span>MBL Product User</span>
+                            {% elseif is_granted('ROLE_PL_USER') %}
+                                <span>PL Product User</span>
+                            {% elseif is_granted('ROLE_UC_USER') %}
+                                <span>UC Product User</span>
+                            {% elseif is_granted('ROLE_BIL_USER') %}
+                                <span>BIL Product User</span>
+                            {% elseif is_granted('ROLE_HL_USER') %}
+                                <span>HLProduct User</span>
+                            {% elseif is_granted('ROLE_LAP_USER') %}
+                                <span>LAP Product User</span>
+                            {% elseif is_granted('ROLE_LAPS_USER') %}
+                                <span>LAP-Suvidha Product User</span>
+
+                                {# RCU Product Users #}
+                            {% elseif is_granted('ROLE_RCU_CD_USER') %}
+                                <span>CD RCU Product User</span>
+                            {% elseif is_granted('ROLE_RCU_TW_USER') %}
+                                <span>TW RCU Product User</span>
+                            {% elseif is_granted('ROLE_RCU_CSELL_USER') %}
+                                <span>Cross Sell RCU Product User</span>
+                            {% elseif is_granted('ROLE_RCU_MBL_USER') %}
+                                <span>MBL RCU Product User</span>
+                            {% elseif is_granted('ROLE_RCU_PL_USER') %}
+                                <span>PL RCU Product User</span>
+                            {% elseif is_granted('ROLE_RCU_UC_USER') %}
+                                <span>UC RCU Product User</span>
+                            {% elseif is_granted('ROLE_RCU_BIL_USER') %}
+                                <span>BIL RCU Product User</span>
+                            {% elseif is_granted('ROLE_RCU_HL_USER') %}
+                                <span>HL RCU Product User</span>
+                            {% elseif is_granted('ROLE_RCU_LAP_USER') %}
+                                <span>LAP RCU Product User</span>
+                            {% elseif is_granted('ROLE_RCU_LAPS_USER') %}
+                                <span>LAP-Suvidha RCU Product User</span>
+                            {% elseif is_granted('ROLE_PL_ADMIN') %}
+                                <span>PL Product Team</span>
+                            {% elseif is_granted('ROLE_PL_USER') %}
+                                <span>PL Product User</span>
+                            {% elseif is_granted('ROLE_UC_ADMIN') %}
+                                <span>UC Product Team</span>
+                            {% elseif is_granted('ROLE_UC_USER') %}
+                                <span>UC Product User</span>
+                            {% elseif is_granted('ROLE_SEPL_USER') %}
+                                <span>SEPL Product User</span>
+                            {% elseif is_granted('ROLE_COLLECTIONS_USER') %}
+                                <span>Collections Product User</span>
+                            {% elseif is_granted('ROLE_TPA_USER') %}
+                                <span>Third Party Aggregator</span>
+                            {% endif %}
+
+                        </p>
+                    </div>
+
+                    <div class="profile-note">
+                        <!--<img type="image/svg+xml" src="{{ asset('CFLdesign/assets/img/user.svg') }}"/>-->
+                        <!-- Profile Dropdown Start -->
+                        <div class="dropdown">
+                            <button class="dropdown-toggle" type="button" data-toggle="dropdown">
+                                <span class="svg-user">
+                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="37px" height="37px" viewbox="0 0 37 37" version="1.1">
+                                        <!-- Generator: sketchtool 51.2 (57519) - http://www.bohemiancoding.com/sketch -->
+                                        <title>5E3C0BCF-CB0B-44B5-AD22-E668D6F3C6EC</title>
+                                        <desc>Created with sketchtool.</desc>
+                                        <defs/>
+                                        <g id="Design" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" opacity="0.800000012">
+                                            <g id="0000_Main-Screen@2x" transform="translate(-1388.000000, -17.000000)" fill="#FFFFFF">
+                                                <g id="Profile" transform="translate(1388.000000, 17.000000)">
+                                                    <path d="M18.5001346,2.42224097 C9.63493726,2.42224097 2.42225859,9.63486718 2.42225859,18.5 C2.42225859,27.365402 9.63493726,34.577759 18.5001346,34.577759 C27.3653319,34.577759 34.5777414,27.365402 34.5777414,18.5 C34.5777414,9.63486718 27.3653319,2.42224097 18.5001346,2.42224097 M18.5001346,37 C8.29919622,37 0,28.7011333 0,18.5 C0,8.29913585 8.29919622,0 18.5001346,0 C28.7010729,0 37,8.29913585 37,18.5 C37,28.7011333 28.7010729,37 18.5001346,37" id="Fill-1"/>
+                                                    <path d="M30.9554017,30.5418622 C30.8282435,29.3090626 30.2771359,26.4925244 27.8754646,25.2918456 C25.9019899,24.3053936 26.6617538,25.0603639 24.2391106,24.0505513 C21.8164674,23.0423315 21.2425298,22.7134257 21.2425298,22.7134257 L21.2212925,20.4015283 C21.2212925,20.4015283 22.1286555,19.7094722 22.4119077,17.5228723 C22.9781468,17.6874579 23.1703443,16.8557695 23.2006074,16.3243171 C23.2340561,15.8111816 23.535891,14.2104535 22.8424937,14.3532713 C22.984518,13.284261 23.0957483,12.3185149 23.0450443,11.8069721 C22.8719604,10.0113958 21.6364814,8.13697773 18.5183172,8 C15.8673732,8.13724319 14.1466222,10.0127232 13.9727419,11.8082994 C13.9230998,12.3195768 14.0247733,13.2847919 14.1665322,14.355395 C13.4736658,14.2107189 13.7720496,15.8143671 13.8025782,16.3272372 C13.8360269,16.8586896 14.023446,17.6935635 14.5910124,17.5287124 C14.8729373,19.7153123 15.7803003,20.4126776 15.7803003,20.4126776 L15.7574702,22.7362553 C15.7574702,22.7362553 15.1837981,23.0879907 12.7608894,24.0962105 C10.3382462,25.1057577 11.0980101,24.3048627 9.1248009,25.2915802 C6.72286406,26.4925244 6.17175654,29.3090626 6.0445983,30.5418622 L6,30.5418622 C9.11444772,33.8978166 13.5607386,36 18.5,36 C23.4395268,36 27.8858177,33.8978166 31,30.5418622 L30.9554017,30.5418622 Z" id="Fill-4"/>
+                                                </g>
+                                            </g>
+                                        </g>
+                                    </svg>
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="{{ path('viewProfile') }}">Profile</a>
+                                </li>
+                               {#  <li>
+                                    <a href="{{ path('ams_manager_change_password') }}">Change Password</a>
+                                </li> #}
+                                <li>
+                                    <a href="{{ path('logout') }}">Logout</a>
+                                </li>
+                            </ul>
+                            {#{% if app.user.name is defined %}#}
+                            {#<!--<div><span class="welcome">Welcome</span> <b>{{ app.user.name }}</b></div>-->#}
+                            {#{% if is_granted('ROLE_ADMIN') %}#}
+                            {#<!--<div style="display:inline-block">Role : <b>Admin</b>-->#}
+                            {#{% elseif is_granted('ROLE_MANAGER') %}#}
+                            {#<div>Role : <b>Manager</b>#}
+                            {#{% elseif is_granted('ROLE_CD_ADMIN') %}#}
+                            {#<div>Role : <b>CD TEAM ADMIN</b>#}
+                            {#{% elseif is_granted('ROLE_TW_ADMIN') %}#}
+                            {#<div>Role : <b>TW TEAM ADMIN</b>#}
+                            {#{% else %}#}
+                            <div>
+                                <b></b>
+                                {#{% endif %}#}
+                                <!--<span class="logout"> <a href="{{ path('logout') }}" style = "color: white">Log Out</a> </span>-->
+                            </div>
+                            <!-- Profile Dropdown End -->
+
+                            <div class="profile-note">
+                                {# {% if app.user.name is defined %}
+
+                                {% if is_granted('ROLE_ADMIN') %}
+                                    <div>Role :
+                                        <b>Admin</b>
+                                    {% elseif is_granted('ROLE_MANAGER') %}
+                                        <div>Role :
+                                            <b>Manager</b>
+                                        {% elseif is_granted('ROLE_CD_ADMIN') %}
+                                            <div>Role :
+                                                <b>CD TEAM ADMIN</b>
+                                            {% elseif is_granted('ROLE_TW_ADMIN') %}
+                                                <div>Role :
+                                                    <b>TW TEAM ADMIN</b>
+                                                {% else %}
+                                                    <div>
+                                                        <b>-</b>
+                                                    {% endif %}
+                                                    <span class="logout">
+                                                        <a href="{{ path('logout') }}" style="color: white">Log Out</a>
+                                                    </span> #}
+                            </div>
+                        </div>
+                        <div class="menu-container">
+
+                            <div class="menu"></div>
+
+                            <div class="links">
+                                <!-- Side Menu Start-->
+                                <div class="col-xs-2 side-menu" style="">
+                                    <div class="nav-side-menu">
+                                        <i class="fa fa-bars fa-2x toggle-btn" data-toggle="collapse" data-target="#menu-content"></i>
+
+                                        <div class="menu-list">
+                                            <ul id="menu-content" class="menu-content collapse out">
+                                                {% if is_granted('ROLE_CD_PARTNER_ADMIN') == false %}
+                                                 {% if is_granted('ROLE_TPA_USER')==false %}
+                                                <!-- Dashboard Start -->
+                                                <li class="{% if routeName == 'ams_dashboard_view'%}active{% endif %} navLink">
+                                                    <a class="uppercase" href="{{ path('ams_dashboard_view') }}">DashBoard</a>
+                                                </li>
+                                                <!-- Dashboard End -->
+                                                {% endif %}
+                                                <!-- Reports start-->
+                                                <li data-toggle="collapse" data-target="#reportmanagement" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Reports
+                                                        <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="reportmanagement">
+                                                    <li class="{% if routeName == 'report_so' %}active{% endif %}">
+                                                        <a href="{{ path('report_so') }}">
+                                                            {% if is_granted('ROLE_TPA_USER') %}
+                                                            Lead Reports
+                                                            {%else%}
+                                                            SO Reports
+                                                            {% endif%}
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                                <!-- Reports End -->
+
+                                                <!-- Attendance Log -->
+                                                {% if is_granted('ROLE_TPA_USER')==false %}
+                                                <li data-toggle="collapse" data-target="#attendance" class="collapsed  uppercase no-bg mainLink">
+                                                    <a href="javascript:void(0);">SO Attendance<span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="attendance">
+                                                    <li class="{% if routeName == 'attendance_log_summary_screen'%}active{% endif %} navLink ">
+                                                        <a href="{{ path('attendance_log_summary_screen') }}">Summary</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'attendance_log_daily_log'%}active{% endif %} navLink">
+                                                        <a href="{{ path('attendance_log_daily_log') }}">Daily Log</a>
+                                                    </li>
+                                                </ul>
+                                                <li data-toggle="collapse" data-target="#managerAttendance" class="collapsed  uppercase no-bg mainLink">
+                                                    <a href="javascript:void(0);">Manager Attendance<span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="managerAttendance">
+                                                    <li class="{% if routeName == 'manager_log_summary'%}active{% endif %} navLink ">
+                                                        <a href="{{ path('manager_log_summary') }}">Summary</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'manager_log_daily'%}active{% endif %} navLink">
+                                                        <a href="{{ path('manager_log_daily') }}">Daily Log</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+
+                                                <!-- backend attendance :visible for Super Admin, Role admin, role admins and users of CD,TW,PL,UC-->
+                                                {% if (is_granted('ROLE_MANAGER') and (app.user.businessUnit.shortName == "CD" or app.user.businessUnit.shortName =="TW" or app.user.businessUnit.shortName =="UC" or app.user.businessUnit.shortName == "PL")) or is_granted('ROLE_ADMIN') or is_granted('ROLE_CD_ADMIN') or is_granted('ROLE_CD_USER') or is_granted('ROLE_TW_ADMIN') or is_granted('ROLE_TW_USER') or is_granted('ROLE_PL_ADMIN') or is_granted('ROLE_PL_USER') or is_granted('ROLE_UC_ADMIN') or is_granted('ROLE_UC_USER') %}
+                                                 <li data-toggle="collapse" data-target="#backendattendance" class="collapsed  uppercase no-bg mainLink">
+                                                    <a href="javascript:void(0);">Backend Attendance<span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="backendattendance">
+                                                    {% if is_granted('ROLE_TPA_USER')==false %}
+                                                    <li class="{% if routeName == 'backend_attendance_log_summary'%}active{% endif %} navLink ">
+                                                        <a href="{{ path('backend_attendance_log_summary') }}">Summary</a>
+                                                    </li>
+                                                    {% endif %}
+                                                    <li class="{% if routeName == 'backend_attendance_log_daily_log'%}active{% endif %} navLink">
+                                                        <a href="{{ path('backend_attendance_log_daily_log') }}">Daily Log</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+
+                                                {% endif %}
+
+
+                                                <!-- Track So -->
+                                                {% if (is_granted('ROLE_CD_PARTNER_ADMIN') == false and app.user.designation != "") or is_granted('ROLE_TPA_USER')==false %}
+                                                <li data-toggle="collapse" data-target="#trackso" class="mainLink collapsed  uppercase">
+                                                    <a href="javascript:void(0);" class="uppercase">Track SO<span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="trackso">
+                                                    <li class="{% if routeName == 'track_so_details'%}active{% endif %} navLink ">
+                                                        <a href="{{ path('track_so_details') }}">Live Tracking</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'track_so_history'%}active{% endif %} navLink">
+                                                        <a href="{{ path('track_so_history') }}">Tracking History</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+                                                <!-- Track Manager -->
+                                                   {% if is_granted('ROLE_RCU_ADMIN') == false and is_granted('ROLE_CD_PARTNER_ADMIN') == false and app.user.designation != "" %}
+                                                        <li data-toggle="collapse" data-target="#trackmanager" class="mainLink collapsed  uppercase">
+                                                            <a href="javascript:void(0);" class="uppercase">Track Manager<span class="caret caret-sharp"></span></a>
+                                                        </li>
+                                                        <ul class="sub-menu collapse" id="trackmanager">
+                                                            <li class="{% if routeName == 'track_manager_details'%}active{% endif %} navLink ">
+                                                                <a href="{{ path('track_manager_details') }}">Live Tracking</a>
+                                                            </li>
+                                                            <li class="{% if routeName == 'track_manager_history'%}active{% endif %} navLink">
+                                                                <a href="{{ path('track_manager_history') }}">Tracking History</a>
+                                                            </li>
+                                                        </ul>
+                                                {% endif %}
+
+                                                  <!-- Track Backend -->
+                                                   {% if is_granted('ROLE_RCU_ADMIN') == false and (is_granted('ROLE_ADMIN') or is_granted('ROLE_CD_ADMIN') or is_granted('ROLE_TW_ADMIN') or is_granted('ROLE_PL_ADMIN') or is_granted('ROLE_UC_ADMIN') or (is_granted("ROLE_MANAGER") and (app.user.businessUnit.shortName == "CD" or app.user.businessUnit.shortName == "TW" or app.user.businessUnit.shortName == "PL" or app.user.businessUnit.shortName == "UC")))and app.user.designation != "" %}
+                                                        <li data-toggle="collapse" data-target="#trackBackend" class="mainLink collapsed  uppercase">
+                                                            <a href="javascript:void(0);" class="uppercase">Track Backend<span class="caret caret-sharp"></span></a>
+                                                        </li>
+                                                        <ul class="sub-menu collapse" id="trackBackend">
+                                                            <li class="{% if routeName == 'track_backend_details'%}active{% endif %} navLink ">
+                                                                <a href="{{ path('track_backend_details') }}">Live Tracking</a>
+                                                            </li>
+                                                            <li class="{% if routeName == 'track_backend_history'%}active{% endif %} navLink">
+                                                                <a href="{{ path('track_backend_history') }}">Tracking History</a>
+                                                            </li>
+                                                        </ul>
+                                                {% endif %}
+                                                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_CD_ADMIN') or is_granted('ROLE_TW_ADMIN') or is_granted('ROLE_MBL_ADMIN') or is_granted('ROLE_CSELL_ADMIN') or is_granted('ROLE_PL_ADMIN') or is_granted('ROLE_HL_ADMIN') or is_granted('ROLE_BIL_ADMIN') or is_granted('ROLE_LAP_ADMIN') or is_granted('ROLE_LAPS_ADMIN') or is_granted('ROLE_UC_ADMIN') or is_granted('ROLE_SEPL_ADMIN') or is_granted('ROLE_COLLECTIONS_ADMIN') %}
+                                                <!-- Manager List -->
+                                              <li data-toggle="collapse" data-target="#manager" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Manager Data
+                                                        <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                 <ul class="sub-menu collapse" id="manager">
+                                                    {#{% if is_granted('ROLE_ADMIN') %}#}
+                                                    <li class="{% if routeName == 'manager_list'%}active{% endif %}">
+                                                            <a href="{{ path('manager_list') }}">Manager List</a>
+                                                    </li>
+
+                                                    {#{% if is_granted('ROLE_ADMIN') %}
+                                                    <li class="{% if routeName == 'manager_upload_history' %}active{% endif %}">
+                                                        <a href="{{ path('manager_upload_history') }}">Upload History</a>
+                                                    </li>
+                                                    {% endif %}#}
+                                                </ul>
+                                                {% endif %}
+
+
+                                                <!-- So Data -->
+                                                {% if is_granted('ROLE_CD_PARTNER_ADMIN') == false and app.user.designation != "" %}
+                                                <li data-toggle="collapse" data-target="#datamanagement" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">SO Data
+                                                        <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="datamanagement">
+                                                    <li class="{% if routeName == 'ams_so_view'%}active{% endif %}">
+                                                        <a href="{{ path('ams_so_view') }}">SO List</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'upload_history' and app.request.get('historyType')  != 'store_upload' %}active{% endif %}">
+                                                        <a href="{{ path('upload_history') }}">Upload History</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+                                                {% if is_granted('ROLE_MBL_ADMIN') or is_granted('ROLE_TPA_USER') or is_granted('ROLE_LAP_ADMIN') or is_granted('ROLE_LAPS_ADMIN') or is_granted('ROLE_BIL_ADMIN') or is_granted('ROLE_SEPL_ADMIN') or ( is_granted('ROLE_MANAGER') and app.user.businessUnit.leadGeneration == true) %}
+                                                <!-- Manager List -->
+                                              <li data-toggle="collapse" data-target="#leadAssignment" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Lead Assignment
+                                                        <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                 <ul class="sub-menu collapse" id="leadAssignment">
+                                                    {#{% if is_granted('ROLE_ADMIN') %}#}
+                                                    <li class="{% if routeName == 'lead_assignment_upload'%}active{% endif %}">
+                                                            <a href="{{ path('lead_assignment_upload') }}">Upload</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'lead_upload_history' %}active{% endif %}">
+                                                        <a href="{{ path('lead_upload_history') }}">Upload History</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+                                                <!-- Manager Lead Assignment -->
+                                                {% if is_granted('ROLE_MBL_ADMIN') or is_granted('ROLE_TPA_USER') or is_granted('ROLE_LAP_ADMIN') or is_granted('ROLE_LAPS_ADMIN') or is_granted('ROLE_BIL_ADMIN') or is_granted('ROLE_SEPL_ADMIN') or ( is_granted('ROLE_MANAGER') and app.user.businessUnit.leadGeneration == true) %}
+                                                <li data-toggle="collapse" data-target="#managerLeadAssignment" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Manager Lead
+                                                        <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                    <ul class="sub-menu collapse" id="managerLeadAssignment">
+                                                    <li class="{% if routeName == 'manager_lead_assignment_upload'%}active{% endif %}">
+                                                            <a href="{{ path('manager_lead_assignment_upload') }}">Upload</a>
+                                                    </li>
+
+                                                     <li class="{% if routeName == 'manager_lead_upload_history' %}active{% endif %}">
+                                                        <a href="{{ path('manager_lead_upload_history') }}">Upload History</a>
+                                                     </li>
+
+                                                </ul>
+                                                {% endif %}
+                                                <!-- Dealer List -->
+                                                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_CD_PARTNER_ADMIN') %}
+                                                <li data-toggle="collapse" data-target="#dealerList" class="collapsed mainLink">
+                                                        <a href="javascript:void(0);" class="uppercase">Dealer Data
+                                                            <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="dealerList">
+                                                    <li class="{% if routeName == 'ams_dealer_view'%}active{% endif %}">
+                                                            <a href="{{ path('ams_dealer_view') }}">Dealer List</a>
+                                                    </li>
+
+                                                    <li class="{% if routeName == 'dealer_upload_history' %}active{% endif %}">
+                                                        <a href="{{ path('dealer_upload_history') }}">Upload History</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+
+                                                <!-- Backend Data -->
+                                                {% if is_granted('ROLE_CD_PARTNER_ADMIN') == false and is_granted('ROLE_ADMIN') or is_granted('ROLE_CD_ADMIN') or is_granted('ROLE_TW_ADMIN') or is_granted('ROLE_PL_ADMIN') or is_granted('ROLE_UC_ADMIN') or (is_granted('ROLE_MANAGER') and (app.user.designation != "") and (app.user.businessUnit.shortName == 'CD' or app.user.businessUnit.shortName == 'TW' or app.user.businessUnit.shortName == 'PL' or app.user.businessUnit.shortName == 'UC'))  %}
+                                                <li data-toggle="collapse" data-target="#payrollMenu" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Backend Data
+                                                        <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="payrollMenu">
+                                                    <li class="{% if routeName == 'backend_view'%}active{% endif %}">
+                                                        <a href="{{ path('backend_view') }}">Backend List</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'backend_upload_history' and app.request.get('historyType')  != 'store_upload' %}active{% endif %}">
+                                                        <a href="{{ path('backend_upload_history') }}">Upload History</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+
+                                                {% if is_granted('ROLE_MBL_ADMIN') or is_granted('ROLE_LAP_ADMIN') or is_granted('ROLE_LAPS_ADMIN') or is_granted('ROLE_BIL_ADMIN') or is_granted('ROLE_SEPL_ADMIN') %}
+                                                <li data-toggle="collapse" data-target="#tpaList" class="collapsed mainLink">
+                                                        <a href="javascript:void(0);" class="uppercase">Tpa Data
+                                                            <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="tpaList">
+                                                    <li class="{% if routeName == 'tpa_list'%}active{% endif %}">
+                                                            <a href="{{ path('tpa_list') }}">Tpa List</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'tpa_upload_history' %}active{% endif %}">
+                                                        <a href="{{ path('tpa_upload_history') }}">Upload History</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+
+
+                                                <!-- dsa data start -->
+                                                {% if  ( is_granted('ROLE_MANAGER') and (app.user.businessUnit.shortName == "BIL" or app.user.businessUnit.shortName == "LAP")) or is_granted("ROLE_BIL_ADMIN") or is_granted("ROLE_LAP_ADMIN")   or is_granted("ROLE_BIL_USER") or is_granted("ROLE_LAP_USER") %}
+                                                    <li data-toggle="collapse" data-target="#dsaList" class="collapsed mainLink">
+                                                        <a href="javascript:void(0)"> DSA DATA <span class="caret caret-sharp"></span></a>
+                                                    </li>
+                                                    <ul class="sub-menu collapse" id="dsaList">
+                                                        <li class="{% if routeName == 'dsa_list' %}active{% endif %}"> <a href="{{ path('dsa_list') }}"> DSA List</a> </li>
+                                                        <li class="{% if routeName == 'dsa_upload_history' %}active{% endif %}"> <a href="{{ path('dsa_upload_history') }}"> Upload History </a> </li>
+                                                    </ul>
+                                               <!-- dsa date end -->
+
+                                                <!-- dsa contest start -->
+                                                    <li data-toggle="collapse" data-target="#dsaContestList" class="collapsed mainLink">
+                                                        <a href="javascript:void(0)"> DSA CONTEST <span class="caret caret-sharp"></span></a>
+                                                    </li>
+                                                    <ul class="sub-menu collapse" id="dsaContestList">
+                                                        <li class="{% if routeName == 'dsa_contest_list' %}active{% endif %}"> <a href="{{ path('dsa_contest_list') }}"> Contest List</a> </li>
+                                                        <li class="{% if routeName == 'dsa_contest_upload_history' %}active{% endif %}"> <a href="{{ path('dsa_contest_upload_history') }}"> Upload History </a> </li>
+                                                    </ul>
+                                                <!-- dsa date end -->
+
+                                                <!-- DSA Group start -->
+                                                    <li data-toggle="collapse" data-target="#dsaGroupList" class="collapsed mainLink">
+                                                        <a href="javascript:void(0)">DSA GROUP <span class="caret caret-sharp"></span></a>
+                                                    </li>
+                                                    <ul class="sub-menu collapse" id="dsaGroupList">
+                                                        <li class="{% if routeName == 'dsa_group_list' %}active{% endif %}"><a href="{{path('dsa_group_list')}}">Group List</a></li>
+                                                        <li class="{% if routeName == 'dsa_group_upload_history' %}active{% endif %}"><a href="{{path('dsa_group_upload_history')}}">Upload History</a></li>
+                                                    </ul>
+                                                {% endif %}
+                                                <!-- DSA Group ends -->
+
+
+                                                <!-- IMEI Start -->
+                                                {% if not is_granted('ROLE_TPA_USER') %}
+                                                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_CD_ADMIN') or is_granted('ROLE_TW_ADMIN') or is_granted('ROLE_MBL_ADMIN') or is_granted('ROLE_CSELL_ADMIN') or is_granted('ROLE_PL_ADMIN') or is_granted('ROLE_HL_ADMIN') or is_granted('ROLE_BIL_ADMIN') or is_granted('ROLE_LAP_ADMIN') or is_granted('ROLE_LAPS_ADMIN') or is_granted('ROLE_UC_ADMIN') or is_granted('ROLE_SEPL_ADMIN') or is_granted('ROLE_COLLECTIONS_ADMIN') or app.user.businessUnit.shortName == "CD"%}
+                                                <li class="{% if routeName == 'imei_list_screen'%}active{% endif %} navLink">
+                                                    <a class="uppercase" href="{{ path('imei_list_screen') }}">IMEI Management</a>
+                                                </li>
+                                                {% endif %}
+                                                {% endif %}
+                                                <!-- IMEI End -->
+
+                                                <!-- Performance Incentive Data -->
+                                                 {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MBL_ADMIN') or is_granted('ROLE_LAP_ADMIN') or is_granted('ROLE_LAPS_ADMIN') %}
+                                                <li data-toggle="collapse" data-target="#performancemanagement" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Performance Data
+                                                    <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="performancemanagement">
+                                                    <li class="{% if routeName == 'performance_incentive_upload' %}active{% endif %}">
+                                                        <a href="{{ path('performance_incentive_upload') }}">PI List</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'performance_upload_history'%}active{% endif %}">
+                                                        <a href="{{ path('performance_upload_history') }}">Upload History</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+
+                                                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_RCU_ADMIN') or is_granted('ROLE_CD_ADMIN') or is_granted('ROLE_TW_ADMIN') or is_granted('ROLE_UC_ADMIN') or is_granted('ROLE_MBL_ADMIN') or is_granted('ROLE_CSELL_ADMIN') or is_granted('ROLE_PL_ADMIN') or is_granted('ROLE_HL_ADMIN') or is_granted('ROLE_BIL_ADMIN') or is_granted('ROLE_LAP_ADMIN') or is_granted('ROLE_LAPS_ADMIN') or is_granted('ROLE_SEPL_ADMIN') or is_granted('ROLE_COLLECTIONS_ADMIN') %}
+                                                <li data-toggle="collapse" data-target="#store" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Store
+                                                        <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="store">
+                                                    <li class="{% if routeName == 'ams_store_view'%}active{% endif %}">
+                                                        <a href="{{ path('ams_store_view') }}">Store List</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'upload_history' and historyType is defined and app.request.get('historyType')  == 'store_upload' %}active{% endif %} ">
+                                                        <a href="{{ path('upload_history', {'historyType':'store_upload'}) }}"> Upload History</a>
+                                                    </li>
+                                                </ul>
+                                                 {% endif %}
+
+                                                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_RCU_ADMIN') or is_granted('ROLE_CD_ADMIN') or is_granted('ROLE_TW_ADMIN') or is_granted('ROLE_UC_ADMIN') or is_granted('ROLE_MBL_ADMIN') or is_granted('ROLE_CSELL_ADMIN') or is_granted('ROLE_PL_ADMIN') or is_granted('ROLE_HL_ADMIN') or is_granted('ROLE_BIL_ADMIN') or is_granted('ROLE_LAP_ADMIN') or is_granted('ROLE_LAPS_ADMIN') or is_granted('ROLE_SEPL_ADMIN') or is_granted('ROLE_COLLECTIONS_ADMIN') %}
+                                                <li data-toggle="collapse" data-target="#branch" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Branch
+                                                        <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="branch">
+                                                    <li class="{% if routeName == 'ams_branch_view'%}active{% endif %}">
+                                                        <a href="{{ path('ams_branch_view') }}">Branch List</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'branch_upload_history' and historyType is defined %}active{% endif %} ">
+                                                        <a href="{{ path('branch_upload_history', {'historyType':'branch_upload'}) }}">Upload History</a>
+                                                    </li>
+                                                </ul>
+                                                 {% endif %}
+
+                                                {% if is_granted('ROLE_ADMIN') or  is_granted('ROLE_HL_ADMIN')%}
+                                                <li data-toggle="collapse" data-target="#master" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Master
+                                                        <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="master">
+                                                    {#{% if is_granted('ROLE_ADMIN') %}#}
+                                                    <li class="{% if routeName == 'hl_employer_master_list'%}active{% endif %}">
+                                                        <a href="{{ path('hl_employer_master_list') }}">HL Employer Master</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+                                                {% if is_granted('ROLE_TPA_USER')==false %}
+                                                <!-- Log -->
+                                                {% if is_granted('ROLE_ADMIN') or  ( is_granted('ROLE_MANAGER') == false) %}
+                                                <li data-toggle="collapse" data-target="#manage" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Manage<span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="manage">
+                                                    <li class="{% if routeName == 'cfl_businessunit_list'%}active{% endif %}">
+                                                        <a class="uppercase" href="{{ path('cfl_businessunit_list') }}">Business Unit</a>
+                                                    </li>
+                                                    {% if is_granted('ROLE_ADMIN') or  ( is_granted('ROLE_MANAGER') == false and app.user.businessUnit.leadGeneration==1 and app.user.businessUnit.shortName|lower!='mbl') %}
+                                                    <li class="{% if routeName == 'lead_campaigns_list'%}active{% endif %}">
+                                                        <a class="uppercase" href="{{ path('lead_campaigns_list') }}">Lead Campaigns</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'lead_campaigns_history'%}active{% endif %}">
+                                                        <a class="uppercase" href="{{ path('lead_campaigns_history') }}">Campaigns History</a>
+                                                    </li>
+                                                    {% endif %}
+                                                    {% if is_granted('ROLE_ADMIN') or  ( is_granted('ROLE_MANAGER') == false and app.user.businessUnit.leadGeneration==1) %}
+                                                    <li class="{% if routeName == 'lead_remarks_list'%}active{% endif %}">
+                                                        <a class="uppercase" href="{{ path('lead_remarks_list') }}">Lead Remarks</a>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                               {% endif %}
+
+                                                <!-- Notification -->
+                                                 {% if is_granted('ROLE_CD_PARTNER_ADMIN') == false %}
+                                                <li data-toggle="collapse" data-target="#service" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Notification<span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="service">
+                                                    {% if is_granted('ROLE_ADMIN') %}
+                                                    <li class="{% if routeName == 'device_list'%}active{% endif %}">
+                                                        <a href="{{ path('device_list') }}">User Devices</a>
+                                                    </li>
+                                                    {% endif %}
+                                                    <li class="{% if routeName == 'notification_attendance'%}active{% endif %}">
+                                                        <a href="{{ path('notification_attendance') }}">Send AMS Notification</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'inbox_notification_create'%}active{% endif %}">
+                                                       <a href="{{ path('inbox_notification_create') }}">Send Inbox Notification</a>
+                                                   </li>
+                                                   <li class="{% if routeName == 'inbox_notification_list'%}active{% endif %}">
+                                                       <a href="{{ path('inbox_notification_list') }}">Inbox Notification History</a>
+                                                   </li>
+                                                    <li class="{% if routeName == 'notification_log'%}active{% endif %}">
+                                                        <a href="{{ path('notification_log') }}">Notification History</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+
+                                                {# <!-- Backend Notification --> CD, TW, UC, PL #}
+                                                 {% if (is_granted('ROLE_MANAGER') and (app.user.businessUnit.shortName == "CD" or app.user.businessUnit.shortName =="TW" or app.user.businessUnit.shortName =="UC" or app.user.businessUnit.shortName == "PL")) or is_granted('ROLE_ADMIN') or is_granted('ROLE_CD_ADMIN') or is_granted('ROLE_CD_USER') or is_granted('ROLE_TW_ADMIN') or is_granted('ROLE_TW_USER') or is_granted('ROLE_PL_ADMIN') or is_granted('ROLE_PL_USER') or is_granted('ROLE_UC_ADMIN') or is_granted('ROLE_UC_USER') %}
+                                                <li data-toggle="collapse" data-target="#backendservice" class="collapsed mainLink">
+                                                    <a href="javascript:void(0);" class="uppercase">Backend Notification<span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="backendservice">
+                                                    {% if is_granted('ROLE_ADMIN') %}
+                                                    <li class="{% if routeName == 'backend_device_list'%}active{% endif %}">
+                                                        <a href="{{ path('backend_device_list') }}">User Devices</a>
+                                                    </li>
+                                                    {% endif %}
+                                                    <li class="{% if routeName == 'backend_notification_attendance'%}active{% endif %}">
+                                                        <a href="{{ path('backend_notification_attendance') }}">Send AMS Notification</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'backend_notification_log'%}active{% endif %}">
+                                                        <a href="{{ path('backend_notification_log') }}">Notification History</a>
+                                                    </li>
+                                                </ul>
+                                                {% endif %}
+
+                                                <!-- Log -->
+
+
+
+                                                 <!-- Banner -->
+                                                {% if is_granted('ROLE_ADMIN') or (app.user.businessUnit.isBannerEnabled == "1") and (is_granted('ROLE_MANAGER') == false) %}
+                                                <li class="{% if routeName == 'cfl_banner_list'%}active{% endif %}">
+                                                    <a class="uppercase" href="{{ path('cfl_banner_list') }}">Banners</a>
+                                                </li>
+                                                {% endif %}
+
+                                                <!-- Mobile App versioning -->
+                                                {% if is_granted('ROLE_ADMIN')  %}
+                                                    <li class="{% if routeName == 'mobile_app_versions_list'%}active{% endif %}">
+                                                    <a class="uppercase" href="{{ path('mobile_app_versions_list') }}">MOBILE APP VERSIONs</a>
+                                                    </li>
+                                                {% endif %}
+
+                                                <!-- Config API -->
+                                                {% if is_granted('ROLE_ADMIN')  %}
+                                                    <li class="{% if routeName == 'ams_config_api_list'%}active{% endif %}">
+                                                    <a class="uppercase" href="{{ path('ams_config_api_list') }}">CONFIG APIs</a>
+                                                    </li>
+                                                <li>
+                                                    <a class="uppercase" href="{{ path('uploads_details') }}">Log</a>
+                                                </li>
+                                                {% endif %}
+                                                {% endif %}
+                                                <!-- Profile -->
+                                                <li data-toggle="collapse" data-target="#profile" class="collapsed" style="display: none;">
+                                                    <a href="javascript:void(0);" class="uppercase">Profile
+                                                        <span class="caret caret-sharp"></span></a>
+                                                </li>
+                                                <ul class="sub-menu collapse" id="profile">
+                                                    <li style="text-align: center; display: none;">
+                                                        <h4>Welcome</h4>
+                                                        <h5>Role :
+                                                            <b>Admin</b>
+                                                        </h5>
+                                                    </li>
+                                                    <li class="{% if routeName == 'viewProfile'%}active{% endif %}">
+                                                        <a href="{{ path('viewProfile') }}">Basic Info</a>
+                                                    </li>
+                                                    <li class="{% if routeName == 'ams_manager_change_password'%}active{% endif %}">
+                                                        <a href="{{ path('ams_manager_change_password') }}">Change Password</a>
+                                                    </li>
+                                                </ul>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+    {% endblock %}
+    <main>
+        {% block body %}{% endblock %}
+
+    </main>
+
+    {% block javascripts %}
+        <script>
+        var activeSoUrl = '{{path("active_SO")}}';
+        var activeDealerUrl = '{{path("active_Dealer")}}';
+        var activeBackendUrl = '{{path("active_backend")}}';
+        var activeDsaUrl = '{{ path("active_Dsa") }}';
+
+        </script>
+        {#<script src="{{ asset('CFLdesign/assets/js/jquery.min.js') }}"></script>
+        <script src="{{ asset('CFLdesign/assets/js/bootstrap.min.js') }}"></script>#}
+        <script src="{{ asset('CFLdesign/assets/js/jquery.dataTables.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('CFLdesign/assets/js/jquery-ui.min.js') }}"></script>
+        <script src="{{ asset('CFLdesign/assets/js/dataTables.bootstrap.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('CFLdesign/assets/js/dataTables.fixedColumns.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('CFLdesign/assets/js/moment.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('CFLdesign/assets/js/bootstrap-datetimepicker.min.js') }}"></script>
+        <script src="{{ asset('CFLdesign/assets/js/underscore-min.js') }}"></script>
+        <script src="{{ asset('CFLdesign/assets/js/main.js') }}"></script>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="text/javascript" src="{{ asset('CFLdesign/assets/js/jsgrid.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('CFLdesign/assets/js/combodate.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('CFLdesign/assets/js/min/moment.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('CFLdesign/assets/js/min/daterangepicker.min.js') }}"></script>
+    {% endblock %}
+
+    {% block footer %}
+        <footer>
+            <div>Copyright &copy; Capital First Limited</div>
+        </footer>
+    {% endblock %}
+
+</body>
+</html>
